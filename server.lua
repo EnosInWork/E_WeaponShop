@@ -22,7 +22,7 @@ function CheckLicense(source, type, cb)
 end
 
 ESX.RegisterServerCallback('e_weaponshop:checkLicense', function(source, cb, type)
-    CheckLicense(source, 'weapon', cb)
+	CheckLicense(source, 'weapon', cb)
 end)
 
 ----------------------------------------------------

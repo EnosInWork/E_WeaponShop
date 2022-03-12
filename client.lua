@@ -40,13 +40,16 @@ ppa = false
 
 Citizen.CreateThread(function()
 	while true do
-		Citizen.Wait(0)
+		local wait = 500
 		local playerCoords = GetEntityCoords(PlayerPedId())
 
 		for k, v in pairs(ConfAmmu.Pos) do
 			local distance = GetDistanceBetweenCoords(playerCoords, v.x, v.y, v.z, true)
 
             if distance < 10.0 then
+
+                wait = 0
+
                 actualZone = v
 
                 zoneDistance = GetDistanceBetweenCoords(playerCoords, actualZone.x, actualZone.y, actualZone.z, true)
@@ -55,13 +58,15 @@ Citizen.CreateThread(function()
             end
             
             if distance <= 1.5 then
+                wait = 0
 				RageUI.Text({
 					message = "Appuyez sur [~b~E~w~] pour ouvrir l'armurerie",
 					time_display = 1
 				})
 
                 if IsControlJustPressed(1, 51) then
-                    RageUI.Visible(RMenu:Get('enos_ammu', 'main'), not RageUI.Visible(RMenu:Get('enos_ammu', 'main')))
+                    tcheckboucle()
+                    open_ammu()
                 end
             end
 
@@ -71,7 +76,7 @@ Citizen.CreateThread(function()
                 end
             end
         end
-    
+    	Citizen.Wait(wait)
 	end
 end)
 
@@ -80,55 +85,54 @@ RMenu.Add('enos_ammu', 'armurerie', RageUI.CreateSubMenu(RMenu:Get('enos_ammu', 
 RMenu.Add('enos_ammu', 'arme', RageUI.CreateSubMenu(RMenu:Get('enos_ammu', 'main'), "Armurerie", "Voici nos armes à feu."))
 RMenu.Add('enos_ammu', 'aces', RageUI.CreateSubMenu(RMenu:Get('enos_ammu', 'main'), "Armurerie", "Voici nos accessoires."))
 RMenu.Add('enos_ammu', 'ppa', RageUI.CreateSubMenu(RMenu:Get('enos_ammu', 'main'), "Armurerie", "Confirmation"))
+RMenu:Get("enos_ammu", "main").Closed = function()
+    ammudefou = false
+end
 
-Citizen.CreateThread(function()
-    while true do
+function tcheckboucle()
+    ESX.TriggerServerCallback('e_weaponshop:checkLicense', function(cb)            
+        if cb then
+            ppa = true 
+            else 
+             ppa = false   
+        end
+    end)
+end
+
+function open_ammu()
+    if ammudefou then
+        ammudefou = false
+        RageUI.CloseAll()
+    else
+        ammudefou = true
+        RageUI.Visible(RMenu:Get("enos_ammu","main"), true)
+        Citizen.CreateThread(function()
+            while ammudefou do
+                Citizen.Wait(1)
         RageUI.IsVisible(RMenu:Get('enos_ammu', 'main'), true, true, true, function()
 
             RageUI.ButtonWithStyle("Armes blanche", "Pour accéder aux armes blanche.", {RightLabel = "→"},true, function()
             end, RMenu:Get('enos_ammu', 'armurerie'))
 
-			ESX.TriggerServerCallback('e_weaponshop:checkLicense', function(cb)            
-                if cb then
-                    ppa = true 
-                	else 
-                 	ppa = false   
-                end
-              end)
+            if ppa then 
+            RageUI.ButtonWithStyle("Armes à feu", "Pour accéder aux armes à feu.", { RightLabel = "→" }, true, function(Hovered, Active, Selected)     
+            end, RMenu:Get('enos_ammu', 'arme')) 
+            else 
+            RageUI.ButtonWithStyle("Armes à feu", "Pour accéder aux armes à feu.", { RightBadge = RageUI.BadgeStyle.Lock }, false, function(Hovered, Active, Selected)     
+            end) 
+            end
 
-              if ppa then 
-              RageUI.ButtonWithStyle("Armes à feu", "Pour accéder aux armes à feu.", { RightLabel = "→" }, true, function(Hovered, Active, Selected)     
-                if (Selected) then
-              
-                end
-              end, RMenu:Get('enos_ammu', 'arme')) 
-              
-              else 
-
-                RageUI.ButtonWithStyle("Armes à feu", "Pour accéder aux armes à feu.", { RightBadge = RageUI.BadgeStyle.Lock }, false, function(Hovered, Active, Selected)     
-                    if (Selected) then
-                    end
-                  end) 
-
-                end
 
 			RageUI.ButtonWithStyle("Accessoires", "Pour accéder aux accessoires.", {RightLabel = "→"},true, function()
             end, RMenu:Get('enos_ammu', 'aces')) 
 
             if ppa then
-
-                RageUI.ButtonWithStyle("Acheter le P.P.A", "Vous avez le PPA.", { RightBadge = RageUI.BadgeStyle.Lock }, false, function(Hovered, Active, Selected)     
-                    if (Selected) then
-                    end
-                  end)
-
-                else 
-
+            RageUI.ButtonWithStyle("Acheter le P.P.A", "Vous avez le PPA.", { RightBadge = RageUI.BadgeStyle.Lock }, false, function(Hovered, Active, Selected)     
+            end)
+            else 
 			RageUI.ButtonWithStyle("Acheter le P.P.A", "Permet de débloquer les armes à feu", {RightLabel = "~g~50,000$"},true, function()
             end, RMenu:Get('enos_ammu', 'ppa'))
-
-            
-        end
+            end
 
 
         end, function()
@@ -190,10 +194,11 @@ Citizen.CreateThread(function()
             end
 			
         end, function()
-        end)
-
-        Citizen.Wait(0)
+        end, 1)
     end
 end)
+	Citizen.Wait(0)
+    end
+end
 
 
